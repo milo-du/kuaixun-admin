@@ -101,7 +101,7 @@ $(function() {
 					if (response.ret == 0) {
 						var list = {
 							rows: response.data,
-							total: response.data
+							total: response.total
 						};
 
 						params.success(list);

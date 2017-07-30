@@ -36,29 +36,25 @@ $(function() {
 			action = self.attr('data-action');
 
 			switch (action) {
-				case 'delete':
-					bootbox.confirm("确认删除?", function(result) {
-						if (result) {
-							page.handleDelete(self, action);
-						}
-					});
+				case 'recive':
+					page.handleRecive(self);
 					break;
 			}
 		},
-		handleDelete: function(self, type) {
+		handleRecive: function(self, type) {
 			var id = self.attr('data-id');
 			return System.request({
-					type: 'get',
-					url: 'manage/delete_article',
+					type: 'POST',
+					url: 'admin/sureApply',
 					data: {
 						id: id
 					}
 				})
 				.done(function(response) {
-					if (response.res == 0) {
+					if (response.ret == 0) {
 						$.toast({
 							icon: 'success',
-							text: '删除成功'
+							text: '确认打款成功'
 						});
 						nodes.table.bootstrapTable('refresh');
 					} else {
@@ -75,7 +71,7 @@ $(function() {
 		getData: function(params) {
 			return System.request({
 					type: 'GET',
-					url: 'admin/get_brusher_job_list',
+					url: 'admin/get_brusher_apply_job_list',
 					data: $.extend(data.filter, {
 						begin: params.data.offset,
 						limit: params.data.limit
@@ -99,10 +95,11 @@ $(function() {
 				})
 		},
 		operateFormatter: function(value, row, index) {
-			return [
-				'<a href="/pages/article-edit.html?id=' + row.id + '">编辑</a>',
-				'<a href="javascript:void(0)" data-action="delete" data-id="' + row.id + '">删除</a>'
-			].join('&nbsp;');
+			var tpl = ['<div class="btn-group btn-group-xs opr-btn">'];
+			tpl.push('<button data-action="recive" data-id="' + row.userID + '" class="btn btn-sm btn-success" type="button">确认打款</button>');
+			tpl.push('</div>');
+
+			return tpl.join('');
 		},
 		statusFormatter: function(value, row, index) {
 			if (row.done == "0") {

@@ -13,27 +13,12 @@ $(function() {
 
 	var page = {
 		init: function() {
-			if (data.id) {
-				$('#title').html('修改文章标签');
-				this.getData(data.id).done(function(response) {
-					if (response.res == 0) {
-						data.formData = $.extend(data.formData, response.data[0]);
-						data.formData.is_delete = data.formData.is_delete[0];
-						nodes.form.html(System.template('appTpl', {
-							info: data.formData
-						}));
-						page.bindEvents();
-					}
-				});
-			} else {
-				nodes.form.html(System.template('appTpl', {
-					info: {
-						is_delete: 0
-					}
-				}));
-				this.bindEvents();
-				$('#title').html('新增文章标签');
-			}
+			nodes.form.html(System.template('appTpl', {
+				info: {
+					is_delete: 0
+				}
+			}));
+			this.bindEvents();
 		},
 		initNodes: function() {
 			$.extend(nodes, {
@@ -48,28 +33,34 @@ $(function() {
 		handleSubmit: function(event) {
 			event.preventDefault();
 			var formData = nodes.form.serializeObject();
-			formData.id = data.id;
-			if (!formData.tag_name) {
+			if (!formData.brusherPrice) {
 				$.toast({
 					icon: 'error',
-					text: '请输入标签名称'
+					text: '请输入刷手单价'
+				});
+				return;
+			}
+			if (!formData.publisherPrice) {
+				$.toast({
+					icon: 'error',
+					text: '请输入发布者单价'
 				});
 				return;
 			}
 			nodes.submit.prop('disabled', true);
 			return System.request({
 					type: 'POST',
-					url: 'manage/edit_article_tag',
+					url: 'admin/set_admin_job_config',
 					data: formData
 				})
 				.done(function(response) {
-					if (response.res == 0) {
+					if (response.ret == 0) {
 						$.toast({
 							icon: 'success',
-							text: !formData.id ? '恭喜您发布成功' : '恭喜您修改成功'
+							text: '发布成功'
 						});
 						setTimeout(function() {
-							System.redirect('/pages/article-tags-list.html');
+							System.redirect('/pages/price-list.html');
 						}, 800);
 					} else {
 						$.toast({

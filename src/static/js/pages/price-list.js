@@ -13,25 +13,22 @@ $(function() {
 		initNodes: function() {
 			$.extend(nodes, {
 				wrapper: $('#wrapper'),
-				filters: $('#filters'),
-				keyword: $('#keyword'),
-				search: $('#search'),
 				table: $('#table'),
-				submit: $('#submit'),
-				failmsg: $('#failmsg'),
-				detailBody: $('#detailBody')
+				search: $("#search")
 			});
 		},
 		initData: function() {
 			$.extend(data, {
 				list: [],
 				filter: {
-					status: 1
+					offset: 0,
+					limit: 10
 				}
 			});
 		},
 		bindEvent: function() {
 			nodes.table.on('click', '[data-action]', this.handleAction);
+			//nodes.search.on('submit',this.handleSearch);
 		},
 		handleAction: function(event) {
 			event.preventDefault();
@@ -51,8 +48,8 @@ $(function() {
 		handleDelete: function(self, type) {
 			var id = self.attr('data-id');
 			return System.request({
-					type: 'POST',
-					url: 'manage/delete_user',
+					type: 'get',
+					url: 'manage/delete_article',
 					data: {
 						id: id
 					}
@@ -63,7 +60,6 @@ $(function() {
 							icon: 'success',
 							text: '删除成功'
 						});
-
 						nodes.table.bootstrapTable('refresh');
 					} else {
 						$.toast({
@@ -75,23 +71,11 @@ $(function() {
 		},
 		handleSearch: function(event) {
 			event.preventDefault();
-			data.filter.keyWord = $.trim(nodes.keyword.val());
-			page.refresh();
-		},
-		refresh: function() {
-			nodes.table.bootstrapTable('selectPage', 1);
-			/*nodes.table.bootstrapTable('refreshOptions', {
-				queryParams: function(params) {
-					params.offset = 0;
-
-					return params;
-				}
-			});*/
 		},
 		getData: function(params) {
 			return System.request({
 					type: 'GET',
-					url: 'admin/get_brusher_user_list',
+					url: 'admin/get_admin_job_config_list',
 					data: $.extend(data.filter, {
 						begin: params.data.offset,
 						limit: params.data.limit
@@ -100,10 +84,9 @@ $(function() {
 				.done(function(response) {
 					if (response.ret == 0) {
 						var list = {
-							rows: response.data,
-							total: response.total
+							rows: response.data.data,
+							total: response.data.total
 						};
-
 						params.success(list);
 						data.filter.keyWord = null;
 						data.list = response.data;
@@ -115,38 +98,34 @@ $(function() {
 					}
 				})
 		},
-		managerFormatter: function(value, row, index) {
-			return [
-				'否',
-				'是'
-			][row.is_admin];
-		},
-		statusFormatter: function(value, row, index) {
-			return [
-				'<span class="label label-success">可用</span>',
-				'<span class="label label-danger">禁用</span>'
-			][row.status];
-		},
 		operateFormatter: function(value, row, index) {
 			return [
-				'<a href="/pages/user-edit.html?id=' + row.id + '">编辑</a>',
+				'<a href="/pages/article-edit.html?id=' + row.id + '">编辑</a>',
 				'<a href="javascript:void(0)" data-action="delete" data-id="' + row.id + '">删除</a>'
 			].join('&nbsp;');
 		},
-		timeFormatter: function(value, row, index) {
-			return new Date(row.reg_time * 1000).format('Y年M月d日 H:m:s');
+		statusFormatter: function(value, row, index) {
+			if (row.done == "0") {
+				return '刷手进行中';
+			} else {
+				return '已完成';
+			}
 		},
-		photoFormatter: function(value, row, index) {
-			return [
-				'<img src="' + row.photo + '" data-action="zoom" width="35" onerror=\'this.error=null;this.src="/static/images/perform-default-cover.png"\' />'
-			].join('');
-		}
+		applyStatusFormatter: function(value, row, index) {
+			if (row.done == "0") {
+				return '未申请提现';
+			} else {
+				return '已申请提现';
+			}
+		},
+		timeFormatter: function(value, row, index) {
+			return new Date(row.create_time * 1000).format('Y年M月d日 H:m:s');
+		},
 	};
 
 	page.init();
 	window.getData = page.getData;
-	window.managerFormatter = page.managerFormatter;
-	window.timeFormatter = page.timeFormatter;
 	window.operateFormatter = page.operateFormatter;
-	window.photoFormatter = page.photoFormatter;
+	window.statusFormatter = page.statusFormatter;
+	window.applyStatusFormatter = page.applyStatusFormatter;
 });
