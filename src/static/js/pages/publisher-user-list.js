@@ -19,7 +19,10 @@ $(function() {
 				table: $('#table'),
 				submit: $('#submit'),
 				failmsg: $('#failmsg'),
-				detailBody: $('#detailBody')
+				money: $("#money"),
+				detailBody: $('#detailBody'),
+				rechargeForm: $("#rechargeForm"),
+				rechargeModal: $("#rechargeModal")
 			});
 		},
 		initData: function() {
@@ -32,19 +35,16 @@ $(function() {
 		},
 		bindEvent: function() {
 			nodes.table.on('click', '[data-action]', this.handleAction);
+			nodes.submit.on('click', this.handleSubmitRecharge);
 		},
 		handleAction: function(event) {
 			event.preventDefault();
-			var self = $(this);
-			action = self.attr('data-action');
-
+			var self = $(this),
+				action = self.attr('data-action'),
+				uid = self.attr('data-userid');            
 			switch (action) {
-				case 'delete':
-					bootbox.confirm("确认删除?", function(result) {
-						if (result) {
-							page.handleDelete(self, action);
-						}
-					});
+				case 'recharge':
+					data.rechargeUserID = uid;
 					break;
 			}
 		},
@@ -88,6 +88,39 @@ $(function() {
 				}
 			});*/
 		},
+		handleSubmitRecharge: function() {
+			var submitFormData = nodes.rechargeForm.serializeObject();
+			if ($.trim(submitFormData.money).length == 0) {
+				$.toast({
+					icon: 'error',
+					text: '请输入充值金额'
+				});
+				return;
+			}
+			submitFormData.uid = data.rechargeUserID;
+			return System.request({
+					type: 'POST',
+					url: 'admin/recharge_publisher',
+					data: submitFormData
+				})
+				.done(function(response) {
+					if (response.ret == 0) {
+						$.toast({
+							icon: 'success',
+							text: '充值成功'
+						});
+						nodes.money.val('');
+						nodes.rechargeModal.modal('hide');
+						page.refresh();
+						data.rechargeUserID = 0;
+					} else {
+						$.toast({
+							icon: 'error',
+							text: response.msg
+						});
+					}
+				});
+		},
 		getData: function(params) {
 			return System.request({
 					type: 'GET',
@@ -128,10 +161,10 @@ $(function() {
 			][row.status];
 		},
 		operateFormatter: function(value, row, index) {
-			return [
-				'<a href="/pages/user-edit.html?id=' + row.id + '">编辑</a>',
-				'<a href="javascript:void(0)" data-action="delete" data-id="' + row.id + '">删除</a>'
-			].join('&nbsp;');
+			var tpl = ['<div class="btn-group btn-group-xs opr-btn">'];
+			tpl.push('<a data-action="recharge" data-userid="' + row.userID + '" class="btn btn-sm btn-info" data-toggle="modal" data-target="#rechargeModal">充值</a>');
+
+			return tpl.join('');
 		},
 		timeFormatter: function(value, row, index) {
 			return new Date(row.reg_time * 1000).format('Y年M月d日 H:m:s');
