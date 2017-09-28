@@ -51,7 +51,7 @@
 	};
 
 	System.api = {
-		url: location.host.indexOf('a.runningdreamer.com') > -1 ? '//api2.runningdreamer.com/' : '//127.0.0.1:999/'
+		url: location.host.indexOf('a.runningdreamer.com') > -1 ? '//api2.runningdreamer.com/' : '//api2.runningdreamer.com/'
 	};
 
 	Date.prototype.format = function(format) {
